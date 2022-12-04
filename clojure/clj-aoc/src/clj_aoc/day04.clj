@@ -18,8 +18,8 @@
            (>= (second (first x)) (second (second x))))))
 
 (defn overlap? [x]
-  (not (or (< (second (first x)) (first (second x)))
-           (> (first (first x)) (second (second x))))))
+  (and (>= (second (first x)) (first (second x)))
+       (<= (first (first x)) (second (second x)))))
 
 (defn count-assignments [pred lines]
   (apply + (map (comp {false 0 true 1} pred split-assignment) lines)))
