@@ -1,11 +1,9 @@
 (ns clj-aoc.day03
-  (:require
-   [clj-aoc.util :as u])
+  (:require [clj-aoc.util :as u])
   (:gen-class))
 
 (def lines
-  (with-open [rdr (clojure.java.io/reader "../inputs/input-03.txt")]
-    (doall (line-seq rdr))))
+  (u/load-lines "../../inputs/input-03.txt"))
 
 (defn split-rucksack [rucksack]
   (split-at (/ (count rucksack) 2) rucksack))

@@ -1,6 +1,5 @@
 (ns clj-aoc.day02
-  (:require
-   [clj-aoc.util :as u])
+  (:require [clj-aoc.util :as u])
   (:gen-class))
 
 (def lines

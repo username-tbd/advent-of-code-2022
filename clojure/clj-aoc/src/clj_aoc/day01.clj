@@ -1,6 +1,5 @@
 (ns clj-aoc.day01
-  (:require
-   [clj-aoc.util :as u])
+  (:require [clj-aoc.util :as u])
   (:gen-class))
 
 ;; Load data and convert: ("5" "" "13") => (5 nil 13)
