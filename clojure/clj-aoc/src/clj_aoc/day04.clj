@@ -2,7 +2,7 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(defn split-assignment [assignment]
+(defn split-assignment [assignment] ; "1-12,15-99" -> [(1 12) (15 99)]
   (->> assignment
        (re-find #"(\d+)-(\d+),(\d+)-(\d+)")
        rest
