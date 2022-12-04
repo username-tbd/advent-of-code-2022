@@ -2,8 +2,7 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(def lines
-  (u/load-lines "../../inputs/input-02.txt"))
+(def lines (u/load-lines 2))
 
 (def char->move {\A :rock \B :paper \C :scissors
                  \X :rock \Y :paper \Z :scissors})
