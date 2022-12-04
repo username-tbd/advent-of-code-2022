@@ -3,16 +3,17 @@
   (:gen-class))
 
 ;; Load data and convert: ("5" "" "13") => (5 nil 13)
-(def lines
-  (map #(if (seq %) (Integer/parseInt %))
-       (u/load-lines "../../inputs/input-01.txt")))
+(def calories
+  (->> (u/load-lines "../../inputs/input-01.txt")
+       (replace {"" "nil"})
+       (map read-string)))
 
 (def elf-cal-totals
   (-> (fn [coll line-cals]
         (if (some? line-cals)
           (update coll (dec (count coll)) + line-cals) 
           (conj coll 0)))
-      (reduce [0] lines)))
+      (reduce [0] calories)))
 
 (println (apply max elf-cal-totals))
 (println (->> elf-cal-totals sort (take-last 3) (apply +)))
