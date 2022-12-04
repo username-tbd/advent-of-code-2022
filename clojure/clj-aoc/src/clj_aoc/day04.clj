@@ -2,14 +2,14 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(def lines (u/load-lines 4))
-
 (defn split-assignment [assignment]
   (->> assignment
        (re-find #"(\d+)-(\d+),(\d+)-(\d+)")
        rest
        (map read-string)
        (split-at 2)))
+
+(def assignment-pairs (map split-assignment (u/load-lines 4)))
 
 (defn containment? [x]
   (let [contained-in?
@@ -21,8 +21,5 @@
   (and (>= (last (first x)) (first (last x)))
        (<= (first (first x)) (last (last x)))))
 
-(defn count-assignments [pred lines]
-  (apply + (map (comp {false 0 true 1} pred split-assignment) lines)))
-
-(println (count-assignments containment? lines))
-(println (count-assignments overlap? lines))
+(println (count (filter containment? assignment-pairs)))
+(println (count (filter overlap? assignment-pairs)))
