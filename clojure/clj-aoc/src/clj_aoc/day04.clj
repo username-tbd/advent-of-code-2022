@@ -7,8 +7,9 @@
 
 (defn split-assignment [assignment]
   (->> assignment
-       (re-find #"((\d+)-(\d+)),((\d+)-(\d+))")
-       (#(map (comp read-string %) [2 3 5 6]))
+       (re-find #"(\d+)-(\d+),(\d+)-(\d+)")
+       rest
+       (map read-string)
        (split-at 2)))
 
 (defn containment? [x]
