@@ -4,7 +4,7 @@
 
 ;; Load data and convert: ("5" "" "13") => (5 nil 13)
 (def calories
-  (->> (u/load-lines "../../inputs/input-01.txt")
+  (->> (u/load-lines 1)
        (replace {"" "nil"})
        (map read-string)))
 

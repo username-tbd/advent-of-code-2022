@@ -2,8 +2,7 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(def lines
-  (u/load-lines "../../inputs/input-03.txt"))
+(def lines (u/load-lines 3))
 
 (defn split-rucksack [rucksack]
   (split-at (/ (count rucksack) 2) rucksack))

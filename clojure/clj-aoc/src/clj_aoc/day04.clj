@@ -2,8 +2,7 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(def lines
-  (u/load-lines "../../inputs/input-04.txt"))
+(def lines (u/load-lines 4))
 
 (defn split-assignment [assignment]
   (->> assignment
