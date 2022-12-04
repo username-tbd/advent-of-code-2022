@@ -1,9 +1,10 @@
 (ns clj-aoc.day02
+  (:require
+   [clj-aoc.util :as u])
   (:gen-class))
 
 (def lines
-  (with-open [rdr (clojure.java.io/reader "../inputs/input-02.txt")]
-    (doall (line-seq rdr))))
+  (u/load-lines "../../inputs/input-02.txt"))
 
 (def char->move {\A :rock \B :paper \C :scissors
                  \X :rock \Y :paper \Z :scissors})

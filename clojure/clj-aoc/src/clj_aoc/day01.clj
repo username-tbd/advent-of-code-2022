@@ -1,11 +1,12 @@
 (ns clj-aoc.day01
+  (:require
+   [clj-aoc.util :as u])
   (:gen-class))
 
 ;; Load data and convert: ("5" "" "13") => (5 nil 13)
 (def lines
-  (with-open [rdr (clojure.java.io/reader "../inputs/input-01.txt")]
-    (map #(if (seq %) (Integer/parseInt %))
-         (doall (line-seq rdr)))))
+  (map #(if (seq %) (Integer/parseInt %))
+       (u/load-lines "../../inputs/input-01.txt")))
 
 (def elf-cal-totals
   (-> (fn [coll line-cals]
