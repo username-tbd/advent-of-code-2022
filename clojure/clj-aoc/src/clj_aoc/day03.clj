@@ -25,7 +25,7 @@
 
 (defn split-groups [lines]
   (for [sack-inds (partition 3 (range (count lines)))]
-    (map #(set (nth lines %)) sack-inds)))
+    (map (comp set (vec lines)) sack-inds)))
 
 (defn find-badge [group]
   (let [in-all-sacks?
