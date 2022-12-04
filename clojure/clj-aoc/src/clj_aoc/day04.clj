@@ -11,11 +11,11 @@
        (map read-string)
        (split-at 2)))
 
-(defn full-contain? [x]
-  (or (and (>= (first (first x)) (first (second x)))
-           (<= (second (first x)) (second (second x))))
-      (and (<= (first (first x)) (first (second x)))
-           (>= (second (first x)) (second (second x))))))
+(defn either-contained? [x]
+  (let [contained-in?
+        (fn [p q] (and (>= (first p) (first q)) (<= (last p) (last q))))]
+    (or (contained-in? (first x) (last x))
+        (contained-in? (last x) (first x)))))
 
 (defn overlap? [x]
   (and (>= (second (first x)) (first (second x)))
@@ -24,5 +24,5 @@
 (defn count-assignments [pred lines]
   (apply + (map (comp {false 0 true 1} pred split-assignment) lines)))
 
-(println (count-assignments full-contain? lines))
+(println (count-assignments either-contained? lines))
 (println (count-assignments overlap? lines))
