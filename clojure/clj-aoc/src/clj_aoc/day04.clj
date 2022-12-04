@@ -13,8 +13,16 @@
 
 (defn full-contain? [x]
   (or (and (>= (first (first x)) (first (second x)))
-             (<= (second (first x)) (second (second x))))
-        (and (<= (first (first x)) (first (second x)))
-             (>= (second (first x)) (second (second x))))))
+           (<= (second (first x)) (second (second x))))
+      (and (<= (first (first x)) (first (second x)))
+           (>= (second (first x)) (second (second x))))))
 
-(apply + (map (comp {false 0 true 1} full-contain? split-assignment) lines))
+(defn overlap? [x]
+  (not (or (< (second (first x)) (first (second x)))
+           (> (first (first x)) (second (second x))))))
+
+(defn count-assignments [pred lines]
+  (apply + (map (comp {false 0 true 1} pred split-assignment) lines)))
+
+(println (count-assignments full-contain? lines))
+(println (count-assignments overlap? lines))
