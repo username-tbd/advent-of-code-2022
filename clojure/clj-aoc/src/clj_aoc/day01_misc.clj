@@ -35,7 +35,7 @@
 (time (top-n 3 big-random-vec)) ; ~15ms
 
 ;; -----------
-;; Alternative solutions
+;; Variations
 
 (defn reduce-fn-alt
   "Differs in using if-let, and using (conj (pop coll) (do-stuff (last coll)))"

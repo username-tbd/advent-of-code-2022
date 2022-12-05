@@ -3,7 +3,7 @@
   (:gen-class))
 
 ;; -----------
-;; Alternative solutions
+;; Variations
 
 ;; Better to turn it into the vector at the end?
 (defn get-stack-vec-alt [crate-lines stack-num]
