@@ -45,7 +45,10 @@
       (recur (rest steps)
              (execute-step (first steps) crates)))))
 
-(println (apply str (map #(last (final-crates %)) crate-nums)))
+(->> crate-nums
+     (map (comp last final-crates))
+     (apply str)
+     println)
 
 ;; -----------
 ;; Part Two
@@ -63,4 +66,7 @@
       (recur (rest steps)
              (execute-step-v2 (first steps) crates)))))
 
-(println (apply str (map #(last (final-crates-v2 %)) crate-nums)))
+(->> crate-nums
+     (map (comp last final-crates-v2))
+     (apply str)
+     println)
