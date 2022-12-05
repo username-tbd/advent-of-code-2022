@@ -6,6 +6,7 @@
 (def crate-lines (butlast (first lines-split)))
 (def step-lines (rest (second lines-split)))
 (def crate-nums (range 1 10))
+(def max-stack-height 8)
 
 (defn parse-step-line [line]
   (->> line
@@ -17,12 +18,10 @@
 (def steps (map parse-step-line step-lines))
 
 (defn get-crate-vec [crate-num]
-  (let [col-num (- ( * 4 crate-num) 3)]
-    (->> crate-lines
-      (map #(get % col-num))
-      reverse
-      (into [])
-      (filterv #(not= \space %)))))
+  (let [col-num (- ( * 4 crate-num) 3)
+        row-nums (reverse (range max-stack-height))
+        char-vec (mapv #(get-in (vec crate-lines) [% col-num]) row-nums)]
+    (filterv #(not= \space %) char-vec)))
 
 (def crates (->> (map get-crate-vec crate-nums)
                  (zipmap crate-nums)))
