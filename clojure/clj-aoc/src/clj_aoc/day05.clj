@@ -46,3 +46,21 @@
              (execute-step (first steps) crates)))))
 
 (println (apply str (map #(last (final-crates %)) crate-nums)))
+
+;; -----------
+;; Part Two
+
+(defn execute-step-v2 [{:keys [from to n]} crates]
+  (-> crates
+      (update to #(apply conj % (take-last n (crates from))))
+      (update from #(into [] (drop-last n %)))))
+
+(def final-crates-v2
+  (loop [steps steps
+         crates crates]
+    (if (empty? steps)
+      crates
+      (recur (rest steps)
+             (execute-step-v2 (first steps) crates)))))
+
+(println (apply str (map #(last (final-crates-v2 %)) crate-nums)))
