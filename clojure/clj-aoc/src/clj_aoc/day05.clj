@@ -37,18 +37,20 @@
         (partial move-crate {:from from :to to})]
     (nth (iterate move-correct-crate crates) n)))
 
-(def final-crates
+(defn get-final-crates [steps crates step-fn]
   (loop [steps steps
          crates crates]
     (if (empty? steps)
       crates
       (recur (rest steps)
-             (execute-step (first steps) crates)))))
+             (step-fn (first steps) crates)))))
 
-(->> crate-nums
-     (map (comp last final-crates))
-     (apply str)
-     println)
+(defn get-answer-string [final-crates]
+  (->> crate-nums
+       (map (comp last final-crates))
+       (apply str)))
+
+(println (get-answer-string (get-final-crates steps crates execute-step)))
 
 ;; -----------
 ;; Part Two
@@ -58,15 +60,4 @@
       (update to #(apply conj % (take-last n (crates from))))
       (update from #(into [] (drop-last n %)))))
 
-(def final-crates-v2
-  (loop [steps steps
-         crates crates]
-    (if (empty? steps)
-      crates
-      (recur (rest steps)
-             (execute-step-v2 (first steps) crates)))))
-
-(->> crate-nums
-     (map (comp last final-crates-v2))
-     (apply str)
-     println)
+(println (get-answer-string (get-final-crates steps crates execute-step-v2)))
