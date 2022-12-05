@@ -8,7 +8,7 @@
 (def crate-nums (range 1 10))
 (def max-stack-height 8)
 
-(defn get-stack-vec [crate-num]
+(defn get-stack-vec [crate-lines crate-num]
   (let [col-num (- ( * 4 crate-num) 3)
         row-nums (reverse (range max-stack-height))
         char-vec (mapv #(get-in (vec crate-lines) [% col-num]) row-nums)]
@@ -21,7 +21,7 @@
        (map read-string)
        (zipmap [:n :from :to])))
        
-(def stacks (zipmap crate-nums (map get-stack-vec crate-nums)))
+(def stacks (zipmap crate-nums (map #(get-stack-vec crate-lines %) crate-nums)))
 (def steps (map parse-step-line step-lines))
 
 (defn move-crate [{:keys [from to]} stacks]
