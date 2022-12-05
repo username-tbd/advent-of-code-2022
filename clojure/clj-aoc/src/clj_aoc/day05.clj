@@ -8,6 +8,12 @@
 (def crate-nums (range 1 10))
 (def max-stack-height 8)
 
+(defn get-stack-vec [crate-num]
+  (let [col-num (- ( * 4 crate-num) 3)
+        row-nums (reverse (range max-stack-height))
+        char-vec (mapv #(get-in (vec crate-lines) [% col-num]) row-nums)]
+    (filterv #(not= \space %) char-vec)))
+
 (defn parse-step-line [line]
   (->> line
        (re-find #"move (\d+) from (\d+) to (\d+)")
@@ -15,48 +21,39 @@
        (map read-string)
        (zipmap [:n :from :to])))
        
+(def stacks (zipmap crate-nums (map get-stack-vec crate-nums)))
 (def steps (map parse-step-line step-lines))
 
-(defn get-crate-vec [crate-num]
-  (let [col-num (- ( * 4 crate-num) 3)
-        row-nums (reverse (range max-stack-height))
-        char-vec (mapv #(get-in (vec crate-lines) [% col-num]) row-nums)]
-    (filterv #(not= \space %) char-vec)))
-
-(def crates (->> (map get-crate-vec crate-nums)
-                 (zipmap crate-nums)))
-
-(defn move-crate [{:keys [from to]} crates]
-  (-> crates
-      (update to conj (peek (crates from)))
+(defn move-crate [{:keys [from to]} stacks]
+  (-> stacks
+      (update to conj (peek (stacks from)))
       (update from pop)))
 
-(defn execute-step [{:keys [from to n]} crates]
+(defn execute-step [{:keys [from to n]} stacks]
   (let [move-correct-crate
         (partial move-crate {:from from :to to})]
-    (nth (iterate move-correct-crate crates) n)))
+    (nth (iterate move-correct-crate stacks) n)))
 
-(defn get-final-crates [steps crates step-fn]
+(defn get-final-crates [steps stacks step-fn]
   (loop [steps steps
-         crates crates]
+         stacks stacks]
     (if (empty? steps)
-      crates
-      (recur (rest steps)
-             (step-fn (first steps) crates)))))
+      stacks
+      (recur (rest steps) (step-fn (first steps) stacks)))))
 
 (defn get-answer-string [final-crates]
   (->> crate-nums
        (map (comp last final-crates))
        (apply str)))
 
-(println (get-answer-string (get-final-crates steps crates execute-step)))
+(println (get-answer-string (get-final-crates steps stacks execute-step)))
 
 ;; -----------
 ;; Part Two
 
-(defn execute-step-v2 [{:keys [from to n]} crates]
-  (-> crates
-      (update to #(apply conj % (take-last n (crates from))))
+(defn execute-step-v2 [{:keys [from to n]} stacks]
+  (-> stacks
+      (update to #(apply conj % (take-last n (stacks from))))
       (update from #(into [] (drop-last n %)))))
 
-(println (get-answer-string (get-final-crates steps crates execute-step-v2)))
+(println (get-answer-string (get-final-crates steps stacks execute-step-v2)))
