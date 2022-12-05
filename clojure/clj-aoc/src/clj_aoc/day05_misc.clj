@@ -6,8 +6,8 @@
 ;; Alternative solutions
 
 ;; Better to turn it into the vector at the end?
-(defn get-crate-vec-alt [crate-lines crate-num]
-  (let [col-num (- ( * 4 crate-num) 3)]
+(defn get-stack-vec-alt [crate-lines stack-num]
+  (let [col-num (- ( * 4 stack-num) 3)]
     (->> crate-lines
          (map #(get % col-num))
          (filter #(not= \space %))

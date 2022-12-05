@@ -8,8 +8,8 @@
 (def stack-nums (range 1 10))
 (def max-stack-height 8)
 
-(defn get-stack-vec [crate-lines crate-num]
-  (let [col-num (- ( * 4 crate-num) 3)
+(defn get-stack-vec [crate-lines stack-num]
+  (let [col-num (- ( * 4 stack-num) 3)
         row-nums (reverse (range max-stack-height))
         char-vec (mapv #(get-in (vec crate-lines) [% col-num]) row-nums)]
     (filterv #(not= \space %) char-vec)))
