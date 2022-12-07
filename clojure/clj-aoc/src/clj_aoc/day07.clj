@@ -40,7 +40,20 @@
                size-map
                current-dirs)))))
 
-(->> (build-size-map line-maps)
+(def size-map (build-size-map line-maps))
+
+(->> size-map
      (filter #(< (second %) 100000))
      vals
      (apply +))
+
+;; -----------
+;; Part Two
+
+(def unused-space (- 70000000 (size-map "//")))
+(def need-to-free (- 30000000 unused-space))
+
+(->> size-map
+     (filter #(> (second %) need-to-free))
+     (sort #(- (second %1) (second %2)))
+     first)
