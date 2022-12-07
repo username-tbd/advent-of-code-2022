@@ -6,7 +6,6 @@
 
 (def line-maps
   (map #(into {} [[:cd (last (re-find #"^\$ cd (\S+)" %))]
-                  [:ls (some? (re-find #"^\$ ls$" %))]
                   [:filesize (if-some [fsize (last (re-find #"^(\d+)" %))]
                                (read-string fsize))]])
        lines))
