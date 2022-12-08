@@ -15,8 +15,8 @@
       (map get-col (range (first distinct-row-lens))))))
 
 (defn build-vis-line [tree-line]
-  "Builds a boolean seq corresponding to left-to-right visibility.
-  (0 2 1 5) => (true true false true)"
+  "Builds a boolean vec corresponding to left-to-right visibility.
+  (0 2 1 5) => [true true false true]"
   (loop [trees tree-line
          tallest-seen -1
          vis-vec []]
@@ -53,3 +53,6 @@
 (->> (reduce combine-flat-vis-seqs flat-vis-seqs)
      (map {false 0 true 1})
      (apply +))
+
+;; -----------
+;; Part Two
