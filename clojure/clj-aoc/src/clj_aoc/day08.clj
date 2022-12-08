@@ -30,15 +30,15 @@
 (defn build-vis-mat [{:keys [tree-mat view-from]}]
   (let [build-vis-line-reverse
         (fn [tree-line] ((comp reverse build-vis-line reverse) tree-line))]
-    (cond
-      (= view-from :left)
-      (->> tree-mat (map build-vis-line))
-      (= view-from :right)
-      (->> tree-mat (map build-vis-line-reverse))
-      (= view-from :top)
-      (->> tree-mat transpose (map build-vis-line) transpose)
-      (= view-from :bottom)
-      (->> tree-mat transpose (map build-vis-line-reverse) transpose))))
+    (condp = view-from
+      :left (map build-vis-line tree-mat)
+      :right (map build-vis-line-reverse tree-mat)
+      :top (->> (transpose tree-mat)
+                (map build-vis-line)
+                transpose)
+      :bottom (->> (transpose tree-mat)
+                   (map build-vis-line-reverse)
+                   transpose))))
 
 (def vis-mats
   (map #(build-vis-mat {:tree-mat tree-mat :view-from %})
