@@ -26,8 +26,10 @@
           :else nil)))
 
 (defn transpose [mat]
-  (let [grab-slice (fn [ind] (map #(nth % ind) mat))]
-    (map grab-slice (range 99))))
+  (let [distinct-row-lens (distinct (map count mat)) 
+        get-col (fn [ind] (map #(nth % ind) mat))]
+    (if (= 1 (count distinct-row-lens))
+      (map get-col (range (first distinct-row-lens))))))
 
 (def vis-from-left (map #(vis-line {:tree-line % :view-from :left}) tree-mat))
 (def vis-from-right (map #(vis-line {:tree-line % :view-from :right}) tree-mat))
