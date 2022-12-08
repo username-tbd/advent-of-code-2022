@@ -27,22 +27,24 @@
                (max tree tallest-seen)
                (conj vis-vec (> tree tallest-seen)))))))
 
-(defn build-vis-mat [{:keys [tree-mat view-from]}]
-  (let [build-vis-line-reverse
-        (fn [tree-line] ((comp reverse build-vis-line reverse) tree-line))]
-    (condp = view-from
-      :left (map build-vis-line tree-mat)
-      :right (map build-vis-line-reverse tree-mat)
-      :top (->> (transpose tree-mat)
-                (map build-vis-line)
-                transpose)
-      :bottom (->> (transpose tree-mat)
-                   (map build-vis-line-reverse)
-                   transpose))))
+(defn build-mat [{:keys [tree-mat line-fn view-direction]}]
+  (let [line-fn-reverse 
+        (fn [tree-line] ((comp reverse line-fn reverse) tree-line))]
+    (condp = view-direction
+      :right (map line-fn tree-mat)
+      :left (map line-fn-reverse tree-mat)
+      :down (->> (transpose tree-mat)
+                 (map line-fn)
+                 transpose)
+      :up (->> (transpose tree-mat)
+               (map line-fn-reverse)
+               transpose))))
 
 (def vis-mats
-  (map #(build-vis-mat {:tree-mat tree-mat :view-from %})
-       [:left :right :top :bottom]))
+  (map #(build-mat {:tree-mat tree-mat
+                    :line-fn build-vis-line
+                    :view-direction %})
+       [:right :left :down :up]))
 
 (def flat-vis-seqs
   (map flatten vis-mats))
@@ -78,28 +80,16 @@
         (recur (rest trees)
                (conj views-vec (calc-view trees)))))))
 
-;; More natural here to do "view-direction" vs. "view-from"
-(defn build-views-mat [{:keys [tree-mat view-direction]}]
-  (let [build-views-line-reverse
-        (fn [tree-line] ((comp reverse build-views-line reverse) tree-line))]
-    (condp = view-direction
-      :right (map build-views-line tree-mat)
-      :left (map build-views-line-reverse tree-mat)
-      :down (->> (transpose tree-mat)
-                 (map build-views-line)
-                 transpose)
-      :up (->> (transpose tree-mat)
-               (map build-views-line-reverse)
-               transpose))))
-
 (def views-mats
-  (map #(build-views-mat {:tree-mat tree-mat :view-direction %})
+  (map #(build-mat {:tree-mat tree-mat
+                    :line-fn build-views-line
+                    :view-direction %})
        [:right :left :down :up]))
 
 (def flat-views-seqs
   (map flatten views-mats))
 
 (def viewing-distance-scores
-  (reduce #(map * %1 %2) flat-views-seqs))
+  (apply #(map * %1 %2 %3 %4) flat-views-seqs))
 
 (println (apply max viewing-distance-scores))
