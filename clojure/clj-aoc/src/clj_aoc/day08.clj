@@ -8,31 +8,37 @@
 (def tree-mat
   (map line-to-tree-mat (u/load-lines 8)))
 
-(defn viz-line [tree-line]
-  "Returns a boolean seq that indicates tree visibility, reading left to right.
-  (023151) => (true true true false true false)"
-  (loop [trees tree-line
-         tallest-seen -1
-         vis-vec []]
-    (let [tree (first trees)]
-      (if (nil? tree)
-        vis-vec
-        (recur (rest trees)
-               (max tree tallest-seen)
-               (conj vis-vec (> tree tallest-seen)))))))
+
+(defn vis-line [{:keys [tree-line view-from]}]
+  (let [fn-body
+        (fn [tree-line reverse?]
+          (loop [trees (if reverse? (reverse tree-line) tree-line )
+                 tallest-seen -1
+                 vis-vec []]
+            (let [tree (first trees)]
+              (if (nil? tree)
+                (if reverse? (vec (reverse vis-vec)) vis-vec)
+                (recur (rest trees)
+                       (max tree tallest-seen)
+                       (conj vis-vec (> tree tallest-seen)))))))]
+    (cond (= view-from :left) (fn-body tree-line false)
+          (= view-from :right) (fn-body tree-line true)
+          :else nil)))
 
 (defn transpose [mat]
   (let [grab-slice (fn [ind] (map #(nth % ind) mat))]
     (map grab-slice (range 99))))
 
-(def vis-from-left
-  (->> tree-mat (map viz-line)))
-(def vis-from-right
-  (->> tree-mat (map reverse) (map viz-line) (map reverse)))
+(def vis-from-left (map #(vis-line {:tree-line % :view-from :left}) tree-mat))
+(def vis-from-right (map #(vis-line {:tree-line % :view-from :right}) tree-mat))
 (def vis-from-top
-  (->> tree-mat transpose (map viz-line) transpose))
+  (->> (transpose tree-mat)
+       (map #(vis-line {:tree-line % :view-from :left}))
+       transpose))
 (def vis-from-bottom
-  (->> tree-mat transpose (map reverse) (map viz-line) (map reverse) transpose))
+  (->> (transpose tree-mat)
+       (map #(vis-line {:tree-line % :view-from :right}))
+       transpose))
 
 (def flat-visibilities
   (map flatten [vis-from-left vis-from-right vis-from-top vis-from-bottom]))
