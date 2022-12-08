@@ -8,7 +8,9 @@
 (def tree-mat
   (map line-to-tree-mat (u/load-lines 8)))
 
-(defn get-visibility-vec [tree-line]
+(defn viz-line [tree-line]
+  "Returns a boolean seq that indicates tree visibility, reading left to right.
+  (023151) => (true true true false true false)"
   (loop [trees tree-line
          tallest-seen -1
          vis-vec []]
@@ -23,33 +25,22 @@
   (let [grab-slice (fn [ind] (map #(nth % ind) mat))]
     (map grab-slice (range 99))))
 
-(def tree-mat-T (transpose tree-mat))
-
-(def vis-from-left (mapv get-visibility-vec tree-mat))
+(def vis-from-left
+  (->> tree-mat (map viz-line)))
 (def vis-from-right
-  (->> (mapv reverse tree-mat)
-       (mapv get-visibility-vec)
-       (mapv reverse)
-       (mapv vec)))
+  (->> tree-mat (map reverse) (map viz-line) (map reverse)))
 (def vis-from-top
-  (->> (mapv get-visibility-vec tree-mat-T)
-       transpose
-       (mapv vec)))
+  (->> tree-mat transpose (map viz-line) transpose))
 (def vis-from-bottom
-  (->> (mapv reverse tree-mat-T)
-       (mapv get-visibility-vec)
-       (mapv reverse)
-       transpose
-       (mapv vec)))
+  (->> tree-mat transpose (map reverse) (map viz-line) (map reverse) transpose))
 
 (def flat-visibilities
-  (mapv flatten [vis-from-left vis-from-right vis-from-top vis-from-bottom]))
+  (map flatten [vis-from-left vis-from-right vis-from-top vis-from-bottom]))
 
 (defn combine-flat-vis [v1 v2]
-  (mapv #(or %1 %2) v1 v2))
+  (map #(or %1 %2) v1 v2))
 
 (->> (reduce combine-flat-vis flat-visibilities)
-     (mapv {false 0 true 1})
+     (map {false 0 true 1})
      (apply +))
-
 
