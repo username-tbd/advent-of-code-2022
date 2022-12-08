@@ -8,47 +8,48 @@
 (def tree-mat
   (map line-to-tree-mat (u/load-lines 8)))
 
-
-(defn vis-line [{:keys [tree-line view-from]}]
-  (let [fn-body
-        (fn [tree-line reverse?]
-          (loop [trees (if reverse? (reverse tree-line) tree-line )
-                 tallest-seen -1
-                 vis-vec []]
-            (let [tree (first trees)]
-              (if (nil? tree)
-                (if reverse? (vec (reverse vis-vec)) vis-vec)
-                (recur (rest trees)
-                       (max tree tallest-seen)
-                       (conj vis-vec (> tree tallest-seen)))))))]
-    (cond (= view-from :left) (fn-body tree-line false)
-          (= view-from :right) (fn-body tree-line true)
-          :else nil)))
-
 (defn transpose [mat]
   (let [distinct-row-lens (distinct (map count mat)) 
         get-col (fn [ind] (map #(nth % ind) mat))]
     (if (= 1 (count distinct-row-lens))
       (map get-col (range (first distinct-row-lens))))))
 
-(def vis-from-left (map #(vis-line {:tree-line % :view-from :left}) tree-mat))
-(def vis-from-right (map #(vis-line {:tree-line % :view-from :right}) tree-mat))
-(def vis-from-top
-  (->> (transpose tree-mat)
-       (map #(vis-line {:tree-line % :view-from :left}))
-       transpose))
-(def vis-from-bottom
-  (->> (transpose tree-mat)
-       (map #(vis-line {:tree-line % :view-from :right}))
-       transpose))
+(defn build-vis-line [tree-line]
+  "Builds a boolean seq corresponding to left-to-right visibility.
+  (0 2 1 5) => (true true false true)"
+  (loop [trees tree-line
+         tallest-seen -1
+         vis-vec []]
+    (let [tree (first trees)]
+      (if (nil? tree)
+        vis-vec
+        (recur (rest trees)
+               (max tree tallest-seen)
+               (conj vis-vec (> tree tallest-seen)))))))
 
-(def flat-visibilities
-  (map flatten [vis-from-left vis-from-right vis-from-top vis-from-bottom]))
+(defn build-vis-mat [{:keys [tree-mat view-from]}]
+  (let [build-vis-line-reverse
+        (fn [tree-line] ((comp reverse build-vis-line reverse) tree-line))]
+    (cond
+      (= view-from :left)
+      (->> tree-mat (map build-vis-line))
+      (= view-from :right)
+      (->> tree-mat (map build-vis-line-reverse))
+      (= view-from :top)
+      (->> tree-mat transpose (map build-vis-line) transpose)
+      (= view-from :bottom)
+      (->> tree-mat transpose (map build-vis-line-reverse) transpose))))
 
-(defn combine-flat-vis [v1 v2]
+(def vis-mats
+  (map #(build-vis-mat {:tree-mat tree-mat :view-from %})
+       [:left :right :top :bottom]))
+
+(def flat-vis-seqs
+  (map flatten vis-mats))
+
+(defn combine-flat-vis-seqs [v1 v2]
   (map #(or %1 %2) v1 v2))
 
-(->> (reduce combine-flat-vis flat-visibilities)
+(->> (reduce combine-flat-vis-seqs flat-vis-seqs)
      (map {false 0 true 1})
      (apply +))
-
