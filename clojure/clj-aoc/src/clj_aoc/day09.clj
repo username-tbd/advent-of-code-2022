@@ -43,7 +43,7 @@
       (let [positions-new
             (perform-move positions (first head-moves))]
         (recur positions-new
-               (rest head-moves) (conj tail-hits (last positions-new)))))))
+               (rest head-moves) (conj tail-hits (peek positions-new)))))))
 
 (defn gen-initial-positions [n-knots]
   (vec (repeat n-knots [0 0])))
