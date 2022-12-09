@@ -21,30 +21,7 @@
       (mapv #(compare % 0) vector-between)
       [0 0])))
 
-(defn perform-move [head-pos tail-pos head-move]
-  (let [head-pos-new (mapv + head-pos head-move)
-        tail-move (calc-follower-move head-pos-new tail-pos)
-        tail-pos-new (mapv + tail-pos tail-move)]
-    [head-pos-new tail-pos-new]))
-
-(defn find-tail-hits [head-moves]
-  (loop [head-pos [0 0]
-         tail-pos [0 0]
-         head-moves head-moves
-         tail-hits #{[0 0]}]
-    (if (empty? head-moves)
-      tail-hits
-      (let [[head-pos-new tail-pos-new]
-            (perform-move head-pos tail-pos (first head-moves))]
-        (recur head-pos-new tail-pos-new
-               (rest head-moves) (conj tail-hits tail-pos-new))))))
-
-(println (count (find-tail-hits unit-moves)))
-
-;; -----------
-;; Part Two
-
-(defn perform-move-snake [positions head-move]
+(defn perform-move [positions head-move]
   (loop [old-positions positions
          new-positions []
          move head-move]
@@ -57,15 +34,19 @@
                (conj new-positions leader-pos-new)
                (calc-follower-move leader-pos-new follower-pos-old))))))
 
-(defn find-tail-hits-snake [head-moves]
-  (loop [positions (vec (repeat 10 [0 0]))
+(defn find-tail-hits [head-moves initial-positions]
+  (loop [positions initial-positions
          head-moves head-moves
          tail-hits #{[0 0]}]
     (if (empty? head-moves)
       tail-hits
       (let [positions-new
-            (perform-move-snake positions (first head-moves))]
+            (perform-move positions (first head-moves))]
         (recur positions-new
                (rest head-moves) (conj tail-hits (last positions-new)))))))
 
-(println (count (find-tail-hits-snake unit-moves)))
+(defn gen-initial-positions [n-knots]
+  (vec (repeat n-knots [0 0])))
+
+(println (count (find-tail-hits unit-moves (gen-initial-positions 2))))
+(println (count (find-tail-hits unit-moves (gen-initial-positions 10))))
