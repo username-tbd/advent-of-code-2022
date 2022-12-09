@@ -2,23 +2,26 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(defn translate-move [move]
-  "'D 5' => [0 -5]"
-  (let [direction (first move)
-        magnitude (read-string (second move))]
-    (condp = direction
-      "R" [magnitude 0]
-      "L" [(- magnitude) 0]
-      "U" [0 magnitude]
-      "D" [0 (- magnitude)])))
+(defn move-seq->unit-moves-vec
+  "('D' '3') => [[0 -1] [0 -1] [0 -1]]"
+  [move-seq]
+  (let [direction (first move-seq)
+        magnitude (read-string (second move-seq))
+        base-vec ({"R" [1 0] "L" [-1 0] "U" [0 1] "D" [0 -1]} direction)]
+    (vec (repeat magnitude base-vec))))
 
 (def parse-line ; Is this weird?
-    (comp translate-move rest (partial re-find #"([RLUD]) (\d+)")))
+    (comp move-seq->unit-moves-vec rest (partial re-find #"([RLUD]) (\d+)")))
 
-(def head-moves (map parse-line (u/load-lines 9)))
+(def unit-moves ; [[1 0] [0 1] [0 1] [-1 0] etc]
+  (->> (u/load-lines 9)
+       (map parse-line)
+       (reduce concat []))) ; Semi-flattening
 
 (defn calc-tail-move [vector-between]
-  (mapv #(compare % 0) vector-between))
+  (if (some #(> (abs %) 1) vector-between)
+    (mapv #(compare % 0) vector-between)
+    [0 0]))
 
 (defn perform-move [head-pos tail-pos head-move]
   (let [head-pos-new (mapv + head-pos head-move)
@@ -39,5 +42,5 @@
         (recur head-pos-new tail-pos-new
                (next head-moves) (conj tail-hits tail-pos-new))))))
 
-(println (count (find-tail-hits head-moves)))
+(println (count (find-tail-hits unit-moves)))
 
