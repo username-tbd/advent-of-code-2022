@@ -18,7 +18,7 @@
        (map parse-line)
        (reduce concat []))) ; Semi-flattening
 
-(defn calc-tail-move [vector-between]
+(defn calc-follower-move [vector-between]
   (if (some #(> (abs %) 1) vector-between)
     (mapv #(compare % 0) vector-between)
     [0 0]))
@@ -26,7 +26,7 @@
 (defn perform-move [head-pos tail-pos head-move]
   (let [head-pos-new (mapv + head-pos head-move)
         vector-between (mapv - head-pos-new tail-pos)
-        tail-move (calc-tail-move vector-between)
+        tail-move (calc-follower-move vector-between)
         tail-pos-new (mapv + tail-pos tail-move)]
     [head-pos-new tail-pos-new]))
 
@@ -40,7 +40,35 @@
       (let [[head-pos-new tail-pos-new]
             (perform-move head-pos tail-pos (first head-moves))]
         (recur head-pos-new tail-pos-new
-               (next head-moves) (conj tail-hits tail-pos-new))))))
+               (rest head-moves) (conj tail-hits tail-pos-new))))))
 
 (println (count (find-tail-hits unit-moves)))
 
+;; -----------
+;; Part Two
+
+(defn perform-move-snake [positions head-move]
+  (loop [old-positions positions
+         new-positions []
+         move head-move]
+    (let [old-position (first old-positions)
+          new-position (mapv + old-position move)]
+      (if (empty? (rest old-positions))
+        (conj new-positions (mapv + old-position move))
+        (recur (rest old-positions)
+               (conj new-positions new-position)
+               (calc-follower-move
+                 (mapv - new-position (second old-positions))))))))
+
+(defn find-tail-hits-snake [head-moves]
+  (loop [positions (vec (repeat 10 [0 0]))
+         head-moves head-moves
+         tail-hits #{[0 0]}]
+    (if (empty? head-moves)
+      tail-hits
+      (let [positions-new
+            (perform-move-snake positions (first head-moves))]
+        (recur positions-new
+               (rest head-moves) (conj tail-hits (last positions-new)))))))
+
+(println (count (find-tail-hits-snake unit-moves)))
