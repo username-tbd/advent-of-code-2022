@@ -2,21 +2,18 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(defn move-seq->unit-moves-vec
-  "('D' '3') => [[0 -1] [0 -1] [0 -1]]"
-  [move-seq]
-  (let [direction (first move-seq)
-        magnitude (read-string (second move-seq))
+(defn move-line->unit-moves-vec
+  "'D 3' => [[0 -1] [0 -1] [0 -1]]"
+  [move-line]
+  (let [[direction magnitude-str] (clojure.string/split move-line #" ")
+        magnitude (read-string magnitude-str)
         base-vec ({"R" [1 0] "L" [-1 0] "U" [0 1] "D" [0 -1]} direction)]
     (vec (repeat magnitude base-vec))))
 
-(def parse-line ; Is this weird?
-    (comp move-seq->unit-moves-vec rest (partial re-find #"([RLUD]) (\d+)")))
-
 (def unit-moves ; [[1 0] [0 1] [0 1] [-1 0] etc]
   (->> (u/load-lines 9)
-       (map parse-line)
-       (reduce concat []))) ; Semi-flattening
+       (map move-line->unit-moves-vec) ; Triply nested vectors now
+       (reduce concat []))) ; Semi-flattening to a vector of vectors
 
 (defn calc-follower-move [vector-between]
   (if (some #(> (abs %) 1) vector-between)
