@@ -35,14 +35,16 @@
 ;; Part two
 ;; ----------------
 
+(def crt-pixels 200)
+(def crt-row-len 40)
+
 (def cycles-with-x
   (map-indexed
     (fn [i m] (assoc m :x (x-history i)))
     cycles))
 
 (defn get-cycle-column [cycle-num]
-  (let [row-len 40]
-    (rem (dec cycle-num) row-len)))
+    (rem (dec cycle-num) crt-row-len))
 
 (defn get-pixel [cyc]
   (let [cycle-column
@@ -61,7 +63,8 @@
                (conj pixels (get-pixel cyc)))))))
 
 (def screen
-  (->> (mapv #(subvec pixels-flat % (+ % 40)) [0 40 80 120 160 200])
+  (->> (mapv #(subvec pixels-flat % (+ % crt-row-len))
+             (range 0 (inc crt-pixels) crt-row-len))
        (mapv #(apply str %))))
 
 (map println screen)
