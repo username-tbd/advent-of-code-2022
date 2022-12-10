@@ -14,7 +14,7 @@
 (def cycles
   (->> (map line->instruction-cycles lines)
        flatten
-       (map-indexed (fn [i cycle-map] (assoc cycle-map :cycle i)))))
+       (map-indexed (fn [i cycle-map] (assoc cycle-map :cycle-num (inc i))))))
 
 (def x-history 
   (loop [cycles cycles
@@ -32,4 +32,36 @@
      (apply +)
      (println))
 
+;; Part two
+;; ----------------
 
+(def cycles-with-x
+  (map-indexed
+    (fn [i m] (assoc m :x (x-history i)))
+    cycles))
+
+(defn get-cycle-column [cycle-num]
+  (let [row-len 40]
+    (rem (dec cycle-num) row-len)))
+
+(defn get-pixel [cyc]
+  (let [cycle-column
+        (get-cycle-column (:cycle-num cyc))
+        sprite-columns
+        ((juxt dec identity inc) (:x cyc))]
+    (if (some #{cycle-column} sprite-columns) "#" ".")))
+
+(def pixels-flat
+  (loop [cycles cycles-with-x
+         pixels []]
+    (let [cyc (first cycles)]
+      (if (nil? cyc)
+        pixels
+        (recur (rest cycles)
+               (conj pixels (get-pixel cyc)))))))
+
+(def screen
+  (->> (mapv #(subvec pixels-flat % (+ % 40)) [0 40 80 120 160 200])
+       (mapv #(apply str %))))
+
+(map println screen)
