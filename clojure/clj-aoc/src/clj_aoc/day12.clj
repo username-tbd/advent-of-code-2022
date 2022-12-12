@@ -80,7 +80,7 @@
     [row col]))
 
 (->> fewest-steps-map-inverse
-     (filter #(some #{(first %)} ground-level-inds))
-     (sort-by second)
+     (filter #(some #{(key %)} ground-level-inds))
+     (sort-by val)
      first
      println)
