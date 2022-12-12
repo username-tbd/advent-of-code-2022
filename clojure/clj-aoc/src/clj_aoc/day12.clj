@@ -13,7 +13,7 @@
           :when (= character (get-in lines [row col]))]
       [row col])))
 
-(def start-ind (find-char-ind \S))
+(def start-ind-pt1 (find-char-ind \S))
 (def end-ind (find-char-ind \E))
 
 (defn char->elevation [character]
@@ -38,9 +38,9 @@
              adjacent-inds)))
 
 (defn get-fewest-steps 
-  "Builds a map from index to fewest steps (from the start).
+  "Builds a map from index to fewest steps from start-ind.
   Covers all indices (we don't stop at the ending index)."
-  [heightmap]
+  [heightmap start-ind]
   (loop [fewest-steps {start-ind 0}
          i 1]
     (let [current-inds
@@ -56,5 +56,5 @@
         (recur (reduce #(assoc %1 %2 i) fewest-steps new-legal-moves)
                (inc i))))))
 
-(def fewest-steps (get-fewest-steps heightmap))
+(def fewest-steps (get-fewest-steps heightmap start-ind-pt1))
 (println (fewest-steps end-ind))
