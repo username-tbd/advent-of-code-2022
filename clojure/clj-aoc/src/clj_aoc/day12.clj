@@ -66,9 +66,11 @@
 
 ;; ----------
 ;; Part 2
-;; We take the inverse of the "legal move" rule (call it backtracking),
-; and start at end-ind.
-;; Then find the closest ground-level index.
+;; We start from end-ind, adopt the inverse of the rule from part 1 (you can
+;; only go down 1 level while going up is not limited), and perform the
+;; same process in reverse: spread out from our initial point, collecting
+;; each point's minimum distance from it.
+;; Then, we find the winner among the points at the lowest elevation.
 (defn legal-backtrack-inds [elevations ind]
   (->> (adjacent-inds ind)
        (filterv #(>= (get-in elevations %) (dec (get-in elevations ind))))))
