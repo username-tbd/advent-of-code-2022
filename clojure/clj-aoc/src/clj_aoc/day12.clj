@@ -23,60 +23,65 @@
     (= \S character) 1
     (= \E character) 26))
 
-(def heightmap
+(def elevations
   (mapv #(mapv char->elevation %) lines))
 
-(defn get-adjacent-inds [[row col]]
+(defn adjacent-inds [[row col]]
   (let [inds [[row (inc col)] [row (dec col)] [(dec row) col] [(inc row) col]]]
     (filterv #(and (<= 0 (first %) (dec nrow))
                    (<= 0 (second %) (dec ncol)))
              inds)))
 
-(defn get-legal-move-inds [ind]
-  (let [adjacent-inds (get-adjacent-inds ind)]
-    (filterv #(<= (get-in heightmap %) (inc (get-in heightmap ind)))
-             adjacent-inds)))
+(defn legal-move-inds [elevations ind]
+  (->> (adjacent-inds ind)
+       (filterv #(<= (get-in elevations %) (inc (get-in elevations ind))))))
 
-(defn get-fewest-steps-map
-  "Builds a map from index to fewest steps from start-ind.
-  Covers all indices (we don't stop at the ending index)."
-  [heightmap start-ind legal-moves-fn]
-  (loop [fewest-steps {start-ind 0}
-         i 1]
+(defn keys-with-value [m value]
+  (->> m
+       (filter (fn [entry] (= value (val entry))))
+       (map key)))
+
+(defn fewest-steps
+  "Returns a map from elevations index to the shortest path from start-ind.
+  e.g., the entry {[30 43] 27} means the shortest path from start-ind to
+  [30 43] is 27 steps.
+  ALL points in the elevations matrix are swept and thus represented as keys.
+  This means that this function does not care about the end point!"
+  [elevations start-ind legality-fn]
+  (loop [fewest-steps-map {start-ind 0}
+         n-steps 1]
     (let [current-inds
-          (->> fewest-steps
-               (filter (fn [[k v]] (= (dec i) v)))
-               (map first))
-          new-legal-moves
-          (->> (map legal-moves-fn current-inds)
-               (reduce into #{})
-               (filter #(not-any? #{%} (keys fewest-steps))))]
-      (if (empty? new-legal-moves)
-        fewest-steps
-        (recur (reduce #(assoc %1 %2 i) fewest-steps new-legal-moves)
-               (inc i))))))
+          (keys-with-value fewest-steps-map (dec n-steps))
+          legal-moves
+          (reduce into #{} (map (partial legality-fn elevations) current-inds))
+          new-moves
+          (filter #(not-any? #{%} (keys fewest-steps-map))
+                  legal-moves)]
+      (if (empty? new-moves)
+        fewest-steps-map
+        (recur (reduce #(assoc %1 %2 n-steps) fewest-steps-map new-moves)
+               (inc n-steps))))))
 
 (def fewest-steps-map
-  (get-fewest-steps-map heightmap start-ind get-legal-move-inds))
+  (fewest-steps elevations start-ind legal-move-inds))
 (println (fewest-steps-map end-ind))
 
 ;; ----------
 ;; Part 2
-;; We take the inverse of the "legal move" rule, and start at end-ind.
+;; We take the inverse of the "legal move" rule (call it backtracking),
+; and start at end-ind.
 ;; Then find the closest ground-level index.
-
-(defn get-legal-move-inds-inverse [ind]
-  (let [adjacent-inds (get-adjacent-inds ind)]
-    (filterv #(>= (get-in heightmap %) (dec (get-in heightmap ind)))
-             adjacent-inds)))
+(defn legal-backtrack-inds [elevations ind]
+  (->> (adjacent-inds ind)
+       (filterv #(>= (get-in elevations %) (dec (get-in elevations ind))))))
 
 (def fewest-steps-map-inverse
-  (get-fewest-steps-map heightmap end-ind get-legal-move-inds-inverse))
+  (fewest-steps elevations end-ind legal-backtrack-inds))
 
 (def ground-level-inds
   (for [row (range nrow)
         col (range ncol)
-        :when (= 1 (get-in heightmap [row col]))]
+        :when (= 1 (get-in elevations [row col]))]
     [row col]))
 
 (->> fewest-steps-map-inverse
