@@ -16,7 +16,7 @@
 (def cns (comp vec cons))
 (defn null? [x] (if (coll? x) (empty? x) (nil? x)))
 
-;; return whether in correct order
+;; Return whether l1 and l2 are ordered
 (defn schemer [l1 l2]
   (cond
     (and (null? l1) (null? l2))
@@ -41,3 +41,25 @@
      (filter some?)
      (apply +)
      println)
+
+;; -------------
+;; Part two
+
+(def new-packets [[[2]] [[6]]])
+(def flat-packets
+  (->> lines (filter not-empty) (map read-str-line) (concat new-packets)))
+
+(defn schemer-comparator [l1 l2]
+  (let [l1-smaller (schemer l1 l2)]
+    (cond
+      l1-smaller -1
+      (nil? l1-smaller) 0
+      :else 1)))
+
+(->> (sort schemer-comparator flat-packets)
+     (map (set new-packets))
+     (keep-indexed #(if %2 (inc %1)))
+     (apply *)
+     println)
+
+
