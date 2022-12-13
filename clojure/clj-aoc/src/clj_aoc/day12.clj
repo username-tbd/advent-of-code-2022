@@ -37,9 +37,7 @@
        (filterv #(<= (get-in elevations %) (inc (get-in elevations ind))))))
 
 (defn keys-with-value [m value]
-  (->> m
-       (filter (fn [entry] (= value (val entry))))
-       (map key)))
+  (keys (filter #(= (val %) value ) m)))
 
 (defn fewest-steps
   "Returns a map from elevations index to the shortest path from start-ind.
