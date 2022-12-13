@@ -36,9 +36,11 @@
         (schemer (cdr l1) (cdr l2))
         (schemer (car l1) (car l2)))))
 
+(defn which-inds [coll] ; 1-based
+  (keep-indexed #(if %2 (inc %1)) coll))
+
 (->> (map #(apply schemer %) pairs)
-     (map-indexed #(if %2 (inc %1) nil)) ; Better way to get inds that are true?
-     (filter some?)
+     which-inds
      (apply +)
      println)
 
@@ -58,8 +60,6 @@
 
 (->> (sort schemer-comparator flat-packets)
      (map (set new-packets))
-     (keep-indexed #(if %2 (inc %1)))
+     which-inds
      (apply *)
      println)
-
-
