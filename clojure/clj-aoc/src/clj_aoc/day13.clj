@@ -2,13 +2,12 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(def lines (u/load-lines 13))
+(def packets
+  (->> (u/load-lines 13)
+       (filter not-empty)
+       (map load-string)))
 
-(defn read-str-line [line]
-  (eval (load-string line)))
-
-(def pairs
-  (->> lines (filter not-empty) (map read-str-line) (partition 2)))
+(def pairs (partition 2 packets))
 
 ;; Scheme-like primitives
 (def car first)
@@ -48,8 +47,7 @@
 ;; Part two
 
 (def new-packets [[[2]] [[6]]])
-(def flat-packets
-  (->> lines (filter not-empty) (map read-str-line) (concat new-packets)))
+(def flat-packets (concat packets new-packets))
 
 (defn schemer-comparator [l1 l2]
   (let [l1-smaller (schemer l1 l2)]
