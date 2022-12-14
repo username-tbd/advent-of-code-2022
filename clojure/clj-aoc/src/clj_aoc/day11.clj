@@ -2,7 +2,7 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
-(def monkey-maps-atom (atom []))
+(def monkey-maps-debug-atom (atom []))
 
 (def monkey-seqs
   (->> (u/load-lines 11)
@@ -76,7 +76,7 @@
             throws-to (throws-to final-worry monkey-map)]
         (do
           (debug-spit monkey-maps)
-          (reset! monkey-maps-atom monkey-maps)
+          (reset! monkey-maps-debug-atom monkey-maps)
           (recur
            (-> monkey-maps
                (update-in [monkey :items] #(vec (rest %)))
