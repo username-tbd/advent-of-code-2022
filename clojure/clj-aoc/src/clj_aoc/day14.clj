@@ -59,13 +59,41 @@
         :else
         (assoc cave [x y] :sand)))))
 
-(defn pour-sand [cave]
+(defn pour-sand [cave falling-fn]
   (loop [cave cave]
-    (if-some [new-cave (simulate-unit-falling cave)]
+    (if-some [new-cave (falling-fn cave)]
       (recur new-cave)
       cave)))
 
-(->> (pour-sand cave)
+(->> (pour-sand cave simulate-unit-falling)
+     (filter #(= :sand (val %)))
+     count
+     println)
+
+;; ----------
+;; Part two
+
+(def floor-y (+ 2 lowest-y))
+
+(defn get-occupant [cave coord] ; Wrapper to make this easy
+  (if (= floor-y (second coord))
+    :rock
+    (cave coord)))
+
+;; Not going to refactor-combine today.
+(defn simulate-unit-falling-2 [cave]
+  (loop [[x y] sand-source-coord]
+    (let [down [x (inc y)]
+          down-left [(dec x) (inc y)]
+          down-right [(inc x) (inc y)]]
+      (cond
+        (= :sand (get-occupant cave sand-source-coord)) nil
+        (nil? (get-occupant cave down)) (recur down)
+        (nil? (get-occupant cave down-left)) (recur down-left)
+        (nil? (get-occupant cave down-right)) (recur down-right)
+        :else (assoc cave [x y] :sand)))))
+
+(->> (pour-sand cave simulate-unit-falling-2)
      (filter #(= :sand (val %)))
      count
      println)
