@@ -45,13 +45,14 @@
   [30 43] is 27 steps.
   ALL points in the elevations matrix are swept and thus represented as keys.
   This means that this function does not care about the end point!"
-  [elevations start-ind legality-fn]
+  [elevations start-ind legal-moves-fn]
   (loop [fewest-steps-map {start-ind 0}
          n-steps 1]
     (let [current-inds
           (keys-with-value fewest-steps-map (dec n-steps))
           legal-moves
-          (reduce into #{} (map (partial legality-fn elevations) current-inds))
+          (reduce into #{} (map (partial legal-moves-fn elevations)
+                                current-inds))
           new-moves
           (filter #(not-any? #{%} (keys fewest-steps-map))
                   legal-moves)]
@@ -78,14 +79,8 @@
 (def fewest-steps-map-inverse
   (fewest-steps elevations end-ind legal-backtrack-inds))
 
-(def ground-level-inds
-  (for [row (range nrow)
-        col (range ncol)
-        :when (= 1 (get-in elevations [row col]))]
-    [row col]))
-
 (->> fewest-steps-map-inverse
-     (filter #(some #{(key %)} ground-level-inds))
-     (sort-by val)
-     first
+     (filter #(= 1 (get-in elevations (key %))))
+     (map val)
+     (apply min)
      println)
