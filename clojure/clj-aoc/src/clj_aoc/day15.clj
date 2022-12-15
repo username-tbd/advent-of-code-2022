@@ -56,4 +56,42 @@
 ;; ----------
 ;; Part two
 
+(def left-bound 0)
+(def right-bound 4000000)
 
+(defn censor-range [r]
+  [(max (first r) left-bound) (min (second r) right-bound)])
+
+(defn find-gap [ranges]
+  (let [ranges (sort-by first ranges)
+        initial-rightmost (second (first ranges))]
+    (loop [ranges (rest ranges)
+           rightmost initial-rightmost]
+      (let [r (first ranges)]
+        (cond 
+          (nil? r)
+          nil
+          (> (first r) (inc rightmost))
+          (inc rightmost)
+          :else
+          (recur (rest ranges) (max (second r) rightmost)))))))
+
+(defn find-possible-position [row]
+  (let [remaining-steps-map (remaining-steps row)
+        eliminated-ranges (eliminate-ranges remaining-steps-map)
+        censored-ranges (mapv censor-range eliminated-ranges)]
+    (cond
+          (pos? (apply min (flatten censored-ranges))) 0 
+          (< right-bound (apply max (flatten censored-ranges))) right-bound
+          :else (find-gap censored-ranges))))
+
+(time
+  (def distress-beacon
+    (first
+      (for [row (range left-bound (inc right-bound))
+            :let [beacon-pos (find-possible-position row)]
+            :when (some? beacon-pos)]
+        {:x beacon-pos :y row})))) ; => ~160 seconds
+  
+(println (+ (* (:x distress-beacon) 4000000)
+            (:y distress-beacon)))
