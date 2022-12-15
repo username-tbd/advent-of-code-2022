@@ -19,39 +19,41 @@
             (abs (- (:y %1) (:y %2))))
         sensors beacons))
 
-(def special-row-dists
-  (mapv #(abs (- (:y %) special-row)) sensors))
+(defn remaining-steps [row]
+  (let [dists-to-row
+        (mapv #(abs (- (:y %) row)) sensors)
+        remaining-steps-at-row
+        (mapv - closest-beacon-dists dists-to-row)]
+    (->> (zipmap (map (juxt :x :y) sensors) remaining-steps-at-row)
+         (remove (comp neg? val))
+         (into {}))))
 
-;; i.e., remaining steps once a straight line gets you down to the special row
-(def remaining-steps 
-    (mapv - closest-beacon-dists special-row-dists))
-
-;; Put into a map, filter on ones that can rule at least one point out
-(def remaining-steps-map
-  (->>
-    (zipmap (map (juxt :x :y) sensors) remaining-steps)
-    (remove (comp neg? val))
-    (into {})))
-
-(def special-row-ranges
+(defn eliminate-ranges [remaining-steps-map]
   (mapv (comp vec (juxt - +))
-        (mapv first (keys remaining-steps-map)) (vals remaining-steps-map)))
+        (mapv first (keys remaining-steps-map))
+        (vals remaining-steps-map)))
 
-(def left-endpoint
-  (apply min (mapv first special-row-ranges)))
-(def right-endpoint
-  (apply max (mapv second special-row-ranges)))
-
-(def special-row-beacon-positions
+(defn find-beacons-on-row [row]
   (->> beacons
-       (filter #(= special-row (:y %)))
+       (filter #(= row (:y %)))
        (mapv :x)
        set))
 
-(def ruled-out
-  (for [x (range left-endpoint (inc right-endpoint))
-        :when (and (some #(<= (first %) x (second %)) special-row-ranges)
-                   (not-any? #{x} special-row-beacon-positions))]
-    x))
-  
+(defn rule-out-points [row]
+  (let [remaining-steps-map (remaining-steps row)
+        eliminated-ranges (eliminate-ranges remaining-steps-map)
+        [left-endpoint right-endpoint] (apply (juxt min max)
+                                              (flatten eliminated-ranges))
+        beacons-on-row (find-beacons-on-row row)]
+    (for [x (range left-endpoint (inc right-endpoint))
+          :when (and (some #(<= (first %) x (second %)) eliminated-ranges)
+                     (not-any? #{x} beacons-on-row))]
+      x)))
+
+(def ruled-out (rule-out-points special-row))
 (println (count ruled-out))
+
+;; ----------
+;; Part two
+
+
