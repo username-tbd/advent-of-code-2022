@@ -3,6 +3,8 @@
             [clojure.pprint :refer [pprint] :rename {pprint pp}])
   (:gen-class))
 
+;; Very ugly
+
 (def monkey-seqs
   (->> (u/load-lines 11)
        (partition-by empty?)
@@ -59,8 +61,6 @@
 (defn get-final-worry [worry {:keys [operation]}]
   (quot (apply-operation worry operation) 3))
 
-;;-----------------------------------------------------------
-
 (defn process-turn [monkey-maps monkey]
   (loop [monkey-maps monkey-maps]
     (if-some [item (get-in monkey-maps [monkey :items 0])]
@@ -81,7 +81,6 @@
       monkey-maps
       (recur (process-turn monkey-maps monkey) (inc monkey)))))
 
-
 (def monkey-maps-final
   (loop [monkey-maps monkey-maps
          round 0]
@@ -90,6 +89,72 @@
       (recur (process-round monkey-maps) (inc round)))))
 
 (->> (map :inspected monkey-maps-final)
+     (sort >)
+     (take 2)
+     (apply *)
+     println)
+
+;; ----------
+;; Part two
+
+(def divisors (mapv :divisor monkey-maps))
+
+(defn build-item-mods [item]
+  (zipmap divisors (mapv (partial mod item) divisors)))
+
+(defn items->item-mods-vec [items]
+  (mapv build-item-mods items))
+
+(defn assoc-item-mods-vec [monkey-map]
+  (assoc monkey-map
+         :item-mods-vec
+         (items->item-mods-vec (:items monkey-map))))
+
+(def monkey-maps-2
+  (mapv assoc-item-mods-vec monkey-maps))
+
+(defn apply-operation-mod [curr-mod divisor {:keys [operator operand]}]
+  (if (= operator "+")
+    (mod (+ operand curr-mod) divisor)
+    (if (= operand :old)
+      (mod (* curr-mod curr-mod) divisor)
+      (mod (* operand curr-mod) divisor))))
+
+(defn operate-item-mods [item-mods {:keys [operation]}]
+  (let [update-mods
+        (fn [item-mods divisor]
+          (update item-mods divisor apply-operation-mod divisor operation))]
+    (reduce update-mods item-mods divisors)))
+    
+(defn process-turn-2 [monkey-maps monkey]
+  (loop [monkey-maps monkey-maps]
+    (if-some [item-mods (get-in monkey-maps [monkey :item-mods-vec 0])]
+      (let [monkey-map (nth monkey-maps monkey)
+            new-item-mods (operate-item-mods item-mods monkey-map)
+            monkey-divisor (monkey-map :divisor)
+            throws-to (throws-to (new-item-mods monkey-divisor) monkey-map)]
+        (recur
+          (-> monkey-maps
+              (update-in [monkey :item-mods-vec] #(vec (rest %)))
+              (update-in [monkey :inspected] inc)
+              (update-in [throws-to :item-mods-vec] #(conj % new-item-mods)))))
+      monkey-maps)))
+
+(defn process-round-2 [monkey-maps]
+  (loop [monkey-maps monkey-maps
+         monkey 0]
+    (if (= monkey (count monkey-maps))
+      monkey-maps
+      (recur (process-turn-2 monkey-maps monkey) (inc monkey)))))
+
+(def monkey-maps-final-2
+  (loop [monkey-maps monkey-maps-2
+         round 0]
+    (if (= round 10000)
+      monkey-maps
+      (recur (process-round-2 monkey-maps) (inc round)))))
+
+(->> (map :inspected monkey-maps-final-2)
      (sort >)
      (take 2)
      (apply *)
