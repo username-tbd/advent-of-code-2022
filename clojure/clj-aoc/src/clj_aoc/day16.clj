@@ -4,6 +4,16 @@
   (:gen-class))
 
 (def starting-valve-id :AA)
+(def n-minutes 30)
+(def minutes (range 1 (inc n-minutes)))
+
+;; If you open a valve in minute m, what is ultimate total flow?
+;; Using a sorted map because minutes are 1-indexed in this problem
+;; and I don't want to get confused with (0-indexed) vectors.
+(defn build-total-flow-map [flow-rate]
+  (let [total-flow
+        (mapv #(* (- n-minutes %) flow-rate) minutes)] 
+    (into (sorted-map) (zipmap minutes total-flow))))
 
 (defn map-valve [line]
   (let [valves (mapv keyword (re-seq #"[A-Z][A-Z]" line))
