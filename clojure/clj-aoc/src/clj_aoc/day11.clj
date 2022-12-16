@@ -1,8 +1,7 @@
 (ns clj-aoc.day11
-  (:require [clj-aoc.util :as u])
+  (:require [clj-aoc.util :as u]
+            [clojure.pprint :refer [pprint] :rename {pprint pp}])
   (:gen-class))
-
-(def monkey-maps-debug-atom (atom []))
 
 (def monkey-seqs
   (->> (u/load-lines 11)
@@ -14,59 +13,53 @@
   (let [items-str (subs (nth monkey-seq 1) (count "Starting items: "))]
     (mapv read-string (clojure.string/split items-str #", "))))
 
-(defn extract-operation-fn [monkey-seq]
+;; Represent as map instead of actual function for now.
+(defn extract-operation [monkey-seq]
   (let [[operator operand]
         (->
           (subs (nth monkey-seq 2) (count "Operation: new = old "))
-          (clojure.string/split #" "))
-        function
-        (case operator "*" * "+" +)]
+          (clojure.string/split #" "))]
     (if (= operand "old")
-      (fn [old] (function old old))
-      (fn [old] (function old (read-string operand))))))
+      {:operator operator :operand :old}
+      {:operator operator :operand (read-string operand)})))
 
-(defn extract-test-fn [monkey-seq]
+(defn extract-divisor [monkey-seq]
+  (let [line
+        (nth monkey-seq 3)]
+    ((comp read-string #(re-find #"\d+" %)) line)))
+
+(defn extract-recipients [monkey-seq]
   (let [lines
-        (drop-while #(not (re-find #"Test" %)) monkey-seq)
-        [div-num true-num false-num]
-        (map (comp read-string #(re-find #"\d+" %)) lines)]
-    (fn [worry]
-      (if (zero? (mod worry div-num))
-        true-num
-        false-num))))
+        (drop-while #(not (re-find #"If true" %)) monkey-seq)]
+    (->>
+      (mapv (comp read-string #(re-find #"\d+" %)) lines)
+      (zipmap [:true :false]))))
 
 (defn build-monkey-map [monkey-seq]
   {:items (extract-starting-items monkey-seq)
-   :operation-fn (extract-operation-fn monkey-seq)
-   :test-fn (extract-test-fn monkey-seq)
+   :operation (extract-operation monkey-seq)
+   :divisor (extract-divisor monkey-seq)
+   :recipients (extract-recipients monkey-seq)
    :inspected 0})
 
 (def monkey-maps (mapv build-monkey-map monkey-seqs))
 
-(defn throws-to [final-worry {:keys [test-fn]}]
-    (test-fn final-worry))
+(defn throws-to [final-worry {:keys [divisor recipients]}]
+  (if (zero? (mod final-worry divisor))
+    (:true recipients)
+    (:false recipients)))
 
-(defn get-final-worry [worry {:keys [operation-fn]}]
-  (let [post-inspection-worry (operation-fn worry)]
-        ; (bigint (/ post-inspection-worry 3))))
-        (bigint (/ post-inspection-worry 3))))
+(defn apply-operation [worry {:keys [operator operand]}]
+  (if (= operator "+")
+    (+ operand worry)
+    (if (= operand :old)
+      (* worry worry)
+      (* worry operand))))
+  
+(defn get-final-worry [worry {:keys [operation]}]
+  (quot (apply-operation worry operation) 3))
 
-(defn debug-spit [monkey-maps]
-  (spit "debug.txt" "\n-----------------\n" :append true)
-  (loop [ms (map #(dissoc % :operation-fn :test-fn) monkey-maps)]
-    (when (seq ms)
-      (spit "debug.txt" (first ms) :append true)
-      (spit "debug.txt" "\n" :append true)
-      (recur (rest ms)))))
-
-(defn debug-wipe []
-  (spit "debug.txt" ""))
-
-(defn debug-print [monkey-maps]
-  (loop [ms (map #(dissoc % :operation-fn :test-fn) monkey-maps)]
-    (when (seq ms)
-      (println (first ms))
-      (recur (rest ms)))))
+;;-----------------------------------------------------------
 
 (defn process-turn [monkey-maps monkey]
   (loop [monkey-maps monkey-maps]
@@ -74,14 +67,11 @@
       (let [monkey-map (nth monkey-maps monkey)
             final-worry (get-final-worry item monkey-map)
             throws-to (throws-to final-worry monkey-map)]
-        (do
-          (debug-spit monkey-maps)
-          (reset! monkey-maps-debug-atom monkey-maps)
-          (recur
-           (-> monkey-maps
-               (update-in [monkey :items] #(vec (rest %)))
-               (update-in [monkey :inspected] inc)
-               (update-in [throws-to :items] #(conj % final-worry))))))
+        (recur
+          (-> monkey-maps
+              (update-in [monkey :items] #(vec (rest %)))
+              (update-in [monkey :inspected] inc)
+              (update-in [throws-to :items] #(conj % final-worry)))))
       monkey-maps)))
 
 (defn process-round [monkey-maps]
@@ -92,7 +82,6 @@
       (recur (process-turn monkey-maps monkey) (inc monkey)))))
 
 
-(debug-wipe)
 (def monkey-maps-final
   (loop [monkey-maps monkey-maps
          round 0]
