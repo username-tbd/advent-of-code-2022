@@ -20,7 +20,8 @@
         flow-rate (read-string (re-find #"\d+" line))]
     [(first valves)
      {:connections (set (rest valves))
-      :flow-rate flow-rate}]))
+      :flow-rate flow-rate
+      :total-flow-map (build-total-flow-map flow-rate)}]))
 
 (defn build-valves-map [lines]
   (let [valves (mapv map-valve lines)]
