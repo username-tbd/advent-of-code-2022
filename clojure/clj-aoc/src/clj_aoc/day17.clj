@@ -5,7 +5,7 @@
 
 ;; cycle is very cool. Used twice here.
 
-(def jets-initial
+(def jets-infinite
   (->> (first (u/load-lines 17))
     (map (comp keyword str))
     cycle))
@@ -29,7 +29,7 @@
         [[0 0] [0 1] [0 2] [0 3]]
         [[0 0] [0 1] [1 0] [1 1]]]))
 
-(def piece-blueprints-cycled
+(def piece-blueprints-2022
   (take n-iters (cycle piece-blueprints)))
 
 ;; get returns nil if key is not found, and (not-any? #{x} nil) returns true!
@@ -71,9 +71,9 @@
            :jets (rest jets)})))))
 
 (def initial-state {:occupancies occupancies-initial
-                    :jets jets-initial})
+                    :jets jets-infinite})
 
 (def final-state
-  (reduce process-piece initial-state piece-blueprints-cycled))
+  (reduce process-piece initial-state piece-blueprints-2022))
 
 (pp (dec (count (:occupancies final-state))))
