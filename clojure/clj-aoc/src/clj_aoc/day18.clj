@@ -36,7 +36,7 @@
 
 ;; ----------
 ;; Part two
-;; Don't think I can use the aboe - so we'll walk the exterior.
+;; Don't think I can use the above - so we'll walk the exterior.
 ;; Note that the unit-length walk-vecs I use are with respect to "sidling"
 ;; from one cube to another - on both cube's same side.
 
