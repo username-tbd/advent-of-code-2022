@@ -3,7 +3,7 @@
 ;; ----------------------------------------------------------------------------
 ;; This file contains everything I went through to get part 2, which was a lot.
 ;; Keeping this for posterity instead of cleaning it up.
-;; Starting at "See if we can find" is where I really figured it out.
+;; Starting at "++++++++" is where I really figured it out.
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
@@ -351,6 +351,7 @@
 ; (def supsup (sup))
 
 ;; ------------------------------------------------
+;; ++++++++
 ;; See if we can find a time where we hit a combo we've seen before, of:
 ;; same piece
 ;; AND the same last 5 of occupancies rows (5 since our tallest piece is 4)
