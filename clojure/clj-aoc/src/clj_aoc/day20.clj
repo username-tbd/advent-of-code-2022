@@ -18,6 +18,11 @@
 
 (def llist (vec (map-indexed build-node numbers)))
 
+;; This function keeps node within the vector itself!
+;; It just removes all pointers to it. We do this because we know
+;; that the node will eventually be reinserted into the virtual llist structure
+;; by altering pointers.
+;; So we don't want to actually "remove" it in any real way.
 (defn remove-node [llist node]
   (let [prev-address (:prev node)
         next-address (:next node)]
@@ -25,16 +30,23 @@
         (assoc-in [prev-address :next] next-address)
         (assoc-in [next-address :prev] prev-address))))
 
-;; Insert a node with value after the node left
-(defn insert-after [llist value left]
-  (let [right-address (:next left)
-        left-address (:prev (get llist right-address))
-        new-node-address (count llist)
-        new-node {:value value :prev left-address :next right-address}
-        llist-with-node (conj llist new-node)]
-    (-> llist-with-node
-        (assoc-in [left-address :next] new-node-address)
-        (assoc-in [right-address :prev] new-node-address))))
+
+;; Insert the node with vector address "address" after left-node.
+;; We use address instead of node because we are never inserting
+;; totally net-new nodes. We're always "inserting" a node which
+;; already has a place in "memory" (i.e., the vector) but which
+;; currently isn't pointed to by anyone else.
+;; I tried using node instead of address, and the only way I could get
+;; it to work was by continually conjing new nodes on the end of the vector.
+;; I prefer them to stay put.
+(defn insert-after [llist address left-node]
+  (let [right-address (:next left-node)
+        left-address (:prev (get llist right-address))]
+    (-> llist
+        (assoc-in [address :prev] left-address)
+        (assoc-in [address :next] right-address)
+        (assoc-in [left-address :next] address)
+        (assoc-in [right-address :prev] address))))
 
 (defn walk-llist [llist start-node n]
   (loop [node start-node
@@ -51,7 +63,7 @@
         left-node (walk-llist llist-without-node
                               (get llist-without-node (:prev node))
                               (:value node))]
-    (insert-after llist-without-node (:value node) left-node)))
+    (insert-after llist-without-node n left-node)))
 
 (def llist-mixed
   (reduce mix-nth llist (range (count llist))))
@@ -80,4 +92,4 @@
             [zero-node]
             (repeat 3 1000))))
 
-(apply + (map :value coordinate-nodes))
+(pp (apply + (map :value coordinate-nodes)))
