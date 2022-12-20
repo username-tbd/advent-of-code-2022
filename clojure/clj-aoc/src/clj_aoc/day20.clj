@@ -3,10 +3,9 @@
             [clojure.pprint :refer [pprint] :rename {pprint pp}])
   (:gen-class))
 
-;; Using a doubly-linked list. There might be a way to do it with a
-;; singly-linked list but this just felt easier.
+;; Using a circular doubly-linked list.
 ;; I'm using a vector to hold the nodes, with the vector indices
-;; acting as the memory addresses.
+;; acting like memory addresses.
 
 (def numbers (mapv read-string (u/load-lines 20)))
 (def n-numbers (count numbers))
@@ -19,10 +18,10 @@
 (def llist (vec (map-indexed build-node numbers)))
 
 ;; This function keeps node within the vector itself!
-;; It just removes all pointers to it. We do this because we know
-;; that the node will eventually be reinserted into the virtual llist structure
-;; by altering pointers.
-;; So we don't want to actually "remove" it in any real way.
+;; It just removes the two pointers to it. 
+;; We know that the node will soon be reinserted into the
+;; virtual llist structure by updating pointers, so we don't want
+;; to actually "remove" it in any real way.
 (defn remove-node [llist node]
   (let [prev-address (:prev node)
         next-address (:next node)]
@@ -30,15 +29,7 @@
         (assoc-in [prev-address :next] next-address)
         (assoc-in [next-address :prev] prev-address))))
 
-
-;; Insert the node with vector address "address" after left-node.
-;; We use address instead of node because we are never inserting
-;; totally net-new nodes. We're always "inserting" a node which
-;; already has a place in "memory" (i.e., the vector) but which
-;; currently isn't pointed to by anyone else.
-;; I tried using node instead of address, and the only way I could get
-;; it to work was by continually conjing new nodes on the end of the vector.
-;; I prefer them to stay put.
+;; Insert the node with vector index "address" after left-node.
 (defn insert-after [llist address left-node]
   (let [right-address (:next left-node)
         left-address (:prev (get llist right-address))]
@@ -65,31 +56,59 @@
                               (:value node))]
     (insert-after llist-without-node n left-node)))
 
+(def vec-inds (range n-numbers))
 (def llist-mixed
-  (reduce mix-nth llist (range (count llist))))
+  (reduce mix-nth llist vec-inds))
 
-;; Find 0.
-(defn find-in-llist [llist start-node value]
-  (loop [node start-node]
-    (if (= (:value node) value)
-      node
-      (let [next-node (get llist (:next node))]
-        (if (= start-node next-node)
-          nil
-          (recur next-node))))))
+;; Will need to find 0.
+(defn find-in-llist [llist value]
+  (let [start-node (get llist 0)]
+    (loop [node start-node]
+      (if (= (:value node) value)
+        node
+        (let [next-node (get llist (:next node))]
+          (if (not= start-node next-node) 
+            (recur next-node)))))))
 
-;; We basically nulled out all the old vector addresses.
-;; Just grab the first one we see
-(def first-node (first (filter some? llist-mixed)))
-
-(def zero-node
-  (find-in-llist llist-mixed first-node 0))
+(defn get-coordinate-nodes [llist coordinate-inds]
+  (let [zero-node (find-in-llist llist  0)
+        step-numbers (mapv - coordinate-inds (concat [0] coordinate-inds))]
+    (rest
+      (reduce (fn [acc steps]
+                (conj acc (walk-llist llist (peek acc) steps)))
+              [zero-node]
+              step-numbers))))
 
 (def coordinate-nodes
-  (rest
-    (reduce (fn [acc steps]
-              (conj acc (walk-llist llist-mixed (peek acc) steps)))
-            [zero-node]
-            (repeat 3 1000))))
+  (get-coordinate-nodes llist-mixed [1000 2000 3000]))
 
 (pp (apply + (map :value coordinate-nodes)))
+
+;; -------------
+;; Part two
+(def n-mixes 10)
+(defn decrypt [value]
+  (* value 811589153))
+
+;; Decrypted values are very large - we need to find the remainders.
+;; Calling this compression to go along with the problem's "decryption".
+;; Decrement because we walk the llist WITHOUT the current node!
+(defn compress [value]
+  (rem value (dec n-numbers)))
+
+;; Replace :value with the decrypted and compressed value.
+;; We add in :value-uncompressed because we will need that for the answer.
+(def llist-pt2
+  (->> llist 
+       (mapv #(assoc % :value-uncompressed (decrypt (:value %))))
+       (mapv #(update % :value (comp compress decrypt)))))
+
+(def llist-mixed-pt2
+  (reduce mix-nth llist-pt2
+          (take (* n-mixes n-numbers) (cycle vec-inds))))
+
+(def coordinate-nodes-pt2
+  (get-coordinate-nodes llist-mixed-pt2 [1000 2000 3000]))
+
+(pp (apply + (map :value-uncompressed coordinate-nodes-pt2)))
+
