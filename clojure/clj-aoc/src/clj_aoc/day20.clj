@@ -73,9 +73,6 @@
 (def zero-node
   (find-in-llist llist-mixed first-node 0))
 
-(def first-coord-node (walk-llist llist-mixed zero-node 1000))
-(def second-coord-node (walk-llist llist-mixed first-coord-node 1000))
-
 (def coordinate-nodes
   (rest
     (reduce (fn [acc steps]
