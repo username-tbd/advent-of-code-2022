@@ -2,17 +2,20 @@
   (:require [clj-aoc.util :as u])
   (:gen-class))
 
+(defn line->packet [line]
+  (let [paren-line (clojure.string/replace line #"\[|\]" {"[" "(" "]" ")"})]
+    (load-string (str "'" paren-line))))
+
 (def packets
   (->> (u/load-lines 13)
        (filter not-empty)
-       (map load-string)))
+       (map line->packet)))
 
 (def pairs (partition 2 packets))
 
 ;; Scheme-like primitives
 (def car first)
-(def cdr (comp vec rest))
-(def cns (comp vec cons))
+(def cdr rest)
 (defn null? [x] (if (coll? x) (empty? x) (nil? x)))
 
 ;; Return whether l1 and l2 are ordered
@@ -27,9 +30,9 @@
         (schemer (cdr l1) (cdr l2))
         (< (car l1) (car l2)))
     (number? (car l1))
-      (schemer (cns [(car l1)] (cdr l1)) l2)
+      (schemer (cons [(car l1)] (cdr l1)) l2)
     (number? (car l2))
-      (schemer l1 (cns [(car l2)] (cdr l2)))
+      (schemer l1 (cons [(car l2)] (cdr l2)))
     :else
       (if (null? (schemer (car l1) (car l2)))
         (schemer (cdr l1) (cdr l2))
@@ -46,7 +49,7 @@
 ;; -------------
 ;; Part two
 
-(def new-packets [[[2]] [[6]]])
+(def new-packets '(((2)) ((6))))
 (def flat-packets (concat packets new-packets))
 
 (defn schemer-comparator [l1 l2]
