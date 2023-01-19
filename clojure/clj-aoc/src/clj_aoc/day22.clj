@@ -90,3 +90,15 @@
 (+ (* 1000 (inc (first (:position final-status))))
    (* 4 (inc (second (:position final-status))))
    ((:direction final-status) {:right 0 :down 1 :left 2 :up 3}))
+
+;; ------- Part two
+
+;; Going to manually define half of the wrap scenarios,
+;; and generate the other half from those.
+
+
+(zipmap 
+  (mapv (fn [pos] {:direction :up :position (vector 0 pos)})
+        (range 50 100))
+  (mapv (fn [pos] {:direction :right :position (vector pos 0)})
+        (range 150 200)))
