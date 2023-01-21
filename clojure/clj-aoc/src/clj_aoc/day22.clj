@@ -93,12 +93,64 @@
 
 ;; ------- Part two
 
-;; Going to manually define half of the wrap scenarios,
-;; and generate the other half from those.
+;; Going to manually define one of the wrap scenarios for every edge,
+;; and generate their respective complements with reverse-cube-wrap.
+
+(defn reverse-cube-wrap [wrap]
+  (let [new-key (val wrap)
+        new-val (key wrap)]
+    {(update new-key :direction flip-direction)
+     (update new-val :direction flip-direction)}))
+
+(def a-wraps
+  (zipmap 
+    (mapv (fn [pos] {:direction :down :position (vector 49 pos)})
+          (range 100 150))
+    (mapv (fn [pos] {:direction :left :position (vector pos 99)})
+          (range 50 100))))
+
+(def b-wraps
+  (zipmap 
+    (mapv (fn [pos] {:direction :up :position (vector 100 pos)})
+          (range 0 50))
+    (mapv (fn [pos] {:direction :right :position (vector pos 50)})
+          (range 50 100))))
+
+(def c-wraps
+  (zipmap 
+    (mapv (fn [pos] {:direction :down :position (vector 149 pos)})
+          (range 50 100))
+    (mapv (fn [pos] {:direction :left :position (vector pos 49)})
+          (range 150 200))))
+
+(def d-wraps
+  (zipmap 
+    (mapv (fn [pos] {:direction :up :position (vector 0 pos)})
+          (range 50 100))
+    (mapv (fn [pos] {:direction :right :position (vector pos 0)})
+          (range 150 200))))
+
+(def e-wraps
+  (zipmap 
+    (mapv (fn [pos] {:direction :left :position (vector pos 50)})
+          (range 0 50))
+    (mapv (fn [pos] {:direction :right :position (vector pos 0)})
+          (reverse (range 100 150)))))
+
+(def f-wraps
+  (zipmap 
+    (mapv (fn [pos] {:direction :up :position (vector 0 pos)})
+          (range 100 150))
+    (mapv (fn [pos] {:direction :up :position (vector 199 pos)})
+          (range 0 50))))
+
+(def g-wraps
+  (zipmap 
+    (mapv (fn [pos] {:direction :right :position (vector pos 99)})
+          (range 100 150))
+    (mapv (fn [pos] {:direction :left :position (vector pos 149)})
+          (range 0 50))))
+
+(def wraps (merge a-wraps b-wraps c-wraps d-wraps e-wraps f-wraps g-wraps
 
 
-(zipmap 
-  (mapv (fn [pos] {:direction :up :position (vector 0 pos)})
-        (range 50 100))
-  (mapv (fn [pos] {:direction :right :position (vector pos 0)})
-        (range 150 200)))
