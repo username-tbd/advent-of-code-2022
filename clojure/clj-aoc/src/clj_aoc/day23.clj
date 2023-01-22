@@ -3,32 +3,41 @@
             [clojure.pprint :refer [pprint] :rename {pprint pp}])
   (:gen-class))
 
-;; For expanding the board, I'm just going to use the hacky solution
-;; of padding by 11 in every direction. With ten rounds that should be enough.
+;; Started with vecs of vecs in part 1, but I'm changing this to
+;; maps of maps for part 2 so we can expand the structure out freely.
+;; We'll start them out with one layer of extra padding on all four sides.
+;; After that, we'll start getting negative indices
+;; (which is why I'm using maps here).
+;; We will grow the whole structure by one in all four directions every round.
 
-(defn pad-line [line]
-  (str "..........." line "..........."))
+(defn vec->map [v]
+  (zipmap (range (count v)) v))
 
 (def lines (u/load-lines 23))
-(def lines-padded-rows (map pad-line lines))
-(def padded-line-count (count (first lines-padded-rows)))
-(def full-pad-line
-  (apply str (repeat padded-line-count  ".")))
+(def grove-init-vecs (mapv #(mapv {\. :empty \# :elf} %) lines))
+(def grove-init
+  (update-vals (vec->map grove-init-vecs) vec->map))
 
-(def lines-padded (concat (repeat 11 full-pad-line)
-                          lines-padded-rows
-                          (repeat 11 full-pad-line)))
+(defn pad-row [row minimum-key maximum-key]
+    (-> row
+        (assoc minimum-key :empty)
+        (assoc maximum-key :empty)))
 
+(defn pad-all-sides [grove]
+  (let [new-min-key (dec (apply min (keys grove)))
+        new-max-key (inc (apply max (keys grove)))
+        grove-rows-padded (update-vals grove
+                                       #(pad-row % new-min-key new-max-key))
+        top-bottom-pad-vals (repeat (inc (- new-max-key new-min-key)) :empty)
+        top-bottom-pad (zipmap (range new-min-key (inc new-max-key))
+                               top-bottom-pad-vals)]
+    (merge grove-rows-padded
+           {new-min-key top-bottom-pad}
+           {new-max-key top-bottom-pad})))
 
-(def grove-init (mapv #(mapv {\. :empty \# :elf} %) lines-padded))
+(def grove-init-padded (pad-all-sides grove-init))
+
 (def cardinals-cycle (cycle [:n :s :w :e]))
-(def n-row (count grove-init))
-(def n-col (count (first grove-init)))
-
-(defn in-bounds? [index]
-  (and
-    (<= 0 (first index) (dec n-row))
-    (<= 0 (second index) (dec n-col))))
 
 (def direction->steps
   {:n [-1 0] :s [1 0] :w [0 -1] :e [0 1]
@@ -58,8 +67,7 @@
 
 (defn prop-from-cardinal [elf-index adjacent-cells cardinal]
   (let [prop-ind (get-proposition-index elf-index cardinal)]
-    (if (and (cardinal-free-of-elves? adjacent-cells cardinal)
-             (in-bounds? prop-ind))
+    (if (cardinal-free-of-elves? adjacent-cells cardinal)
       prop-ind)))
 
 ;; Get proposition index for an elf and an ordered seq of cardinals.
@@ -74,10 +82,11 @@
         first))))
 
 (defn get-elf-indices [grove]
-  (for [row (range n-row)
-        col (range n-col)
-        :when (= :elf (get-in grove [row col]))]
-    [row col]))
+  (let [grove-keys (distinct (keys grove))]
+    (for [row grove-keys
+          col grove-keys
+          :when (= :elf (get-in grove [row col]))]
+      [row col])))
 
 ;; Remove any propositions that appear more than once
 (defn clean-proposition-map [proposition-map]
@@ -107,28 +116,38 @@
       (recur (make-move grove (first props))
              (rest props)))))
 
+;; Pad all sides after we're done making moves!
 (defn process-round [grove cardinals]
   (let [proposition-map (gen-proposition-map grove cardinals)]
-    (make-moves grove proposition-map)))
+    (if (empty? proposition-map) ; for part 2
+      (/ 5 0)
+      (->>
+        (make-moves grove proposition-map)
+        (pad-all-sides)))))
     
 (defn process-rounds [grove cardinals-cycle n-rounds]
   (loop [grove grove
          cardinals-cycle cardinals-cycle
-         n-rounds-left n-rounds]
+         n-rounds-left n-rounds ; pt 1 
+         round 1] ; pt 2 
+    (spit "hi.txt" round :append true)
+    (spit "hi.txt" "\n" :append true)
     (if (zero? n-rounds-left)
       grove
       (recur (process-round grove (take 4 cardinals-cycle))
              (rest cardinals-cycle)
-             (dec n-rounds-left)))))
+             (dec n-rounds-left)
+             (inc round)))))
 
-(def grove-final (process-rounds grove-init cardinals-cycle 10))
+(def grove-final (process-rounds grove-init-padded cardinals-cycle 10))
 
 (defn get-subrect-cells [grove]
   (let [elf-inds (get-elf-indices grove)
         elf-rows (map first elf-inds)
-        elf-cols (map second elf-inds)]
-    (for [row (range n-row)
-          col (range n-col)
+        elf-cols (map second elf-inds)
+        grove-keys (distinct (keys grove))]
+    (for [row grove-keys
+          col grove-keys
           :when (and (<= (apply min elf-rows) row (apply max elf-rows))
                      (<= (apply min elf-cols) col (apply max elf-cols)))]
       (get-in grove [row col]))))
@@ -137,3 +156,9 @@
      get-subrect-cells
      (filter #(= :empty %))
      count)
+
+;; ----- Part 2
+
+(process-rounds grove-init-padded cardinals-cycle 10000000)
+
+
