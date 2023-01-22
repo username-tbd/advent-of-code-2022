@@ -29,8 +29,6 @@
 
 (def valves (build-valves-map (u/load-lines 16)))
 
-;; -----
-
 (defn keys-with-value [m value]
   (keys (filter #(= (val %) value ) m)))
 
@@ -56,7 +54,7 @@
                                   (keys valves)))
 
 ;; Now we build the main data structure, held in graph.
-;; Like valves, but we remove all non-relevant (productive or starting) valves
+;; Like valves, but we only retain relevant (productive or starting) valves
 ;; and we add, to each relevant valve, a map of distances
 ;; to every other relevant valve.
 (defn prune-distances [distances]
@@ -72,3 +70,5 @@
                 relevant-valves relevant-valve-ids)]
     (reduce #(update-in %1 [%2 :distances] prune-distances)
             excessive-graph relevant-valve-ids)))
+
+
