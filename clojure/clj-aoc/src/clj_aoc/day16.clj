@@ -30,7 +30,7 @@
 (def valves (build-valves-map (u/load-lines 16)))
 
 (defn keys-with-value [m value]
-  (keys (filter #(= (val %) value ) m)))
+  (keys (filter #(= (val %) value) m)))
 
 (defn build-distances [valve-id]
   (loop [steps-map {valve-id 0}
@@ -60,6 +60,12 @@
 (defn prune-distances [distances]
   (apply (partial dissoc distances) irrelevant-valve-ids))
 
+(defn remove-own-distances [map-element]
+  (let [this-valve (key map-element)
+        distances (:distances (val map-element))
+        own-removed (dissoc distances this-valve)]
+    (assoc-in map-element [1 :distances] own-removed)))
+
 (def graph
   (let [relevant-valves
         (->> valves
@@ -67,8 +73,45 @@
              (into {}))
         excessive-graph ; Contains distances to irrelevant points
         (reduce #(assoc-in %1 [%2 :distances] (build-distances %2))
-                relevant-valves relevant-valve-ids)]
-    (reduce #(update-in %1 [%2 :distances] prune-distances)
-            excessive-graph relevant-valve-ids)))
+                relevant-valves relevant-valve-ids)
+        relevant-graph
+        (reduce #(update-in %1 [%2 :distances] prune-distances)
+                excessive-graph relevant-valve-ids)]
+    (into {} (map remove-own-distances relevant-graph))))
+
+;; If I'm at valve move-from and want to go to move-to (and
+;; immediately open the valve), how many points will that ultimately be?
+(defn action->points [minute move-from move-to]
+  (let [distance (get-in graph [move-from :distances move-to])
+        opening-minute (+ minute distance)]
+    (get-in graph [move-to :total-flow-map opening-minute] 0)))
+
+;; might not be needed
+; (defn other-productives [valve-id]
+;   (remove #{valve-id} productive-valve-ids))
+
+;; delete once generalized
+(defn best-option-single [minute move-from closed-valves]
+  (apply max-key #(action->points minute move-from %) closed-valves))
+
+; (defn best-option [minute move-from closed-valves n-foresight])
+
+(loop [minute 1
+       valve :AA
+       points 0
+       closed-valves productive-valve-ids]
+  (pp minute)
+  (if (>= minute 30)
+    points
+    (let [next-valve (best-option-single minute valve closed-valves)
+          new-points (action->points minute valve next-valve)
+          distance (get-in graph [valve :distances next-valve])
+          minutes-spent (inc distance)]
+      (recur (+ minute minutes-spent)
+             next-valve
+             (+ points new-points)
+             (remove #{next-valve} closed-valves)))))
+
+
 
 
